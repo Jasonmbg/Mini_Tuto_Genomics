@@ -10,6 +10,10 @@
 
 *We will exploit the Colorectal Adenocarcinoma (MSK, Nat Commun 2022) dataset {https://doi.org/10.1038/s41467-022-35592-9} including ~180 patients with colitis-associated cancers (mainly focusing on mutations + copy-number alterations)*.
 
+Data were downloaded and retrieved utilizing the cBioPortal for Cancer Genomics web portal (https://www.cbioportal.org/) [https://doi.org/10.1158/0008-5472.can-23-0816] from here:
+
+https://www.cbioportal.org/study/summary?id=bowel_colitis_msk_2022
+
 ## Important R packages that need to be installed for the first part of the tutorial:
 
 ```r
