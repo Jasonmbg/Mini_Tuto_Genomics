@@ -1,0 +1,78 @@
+---
+title: "Small tutorial for harnessing public genomics datasets"
+subtitle: "PART 1 {Focus on mutational data} -> https://www.cbioportal.org/"
+author: "Efstathios-Iason Vlachavas"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+---
+
+### How to read appropriately the mutational + clinical data
+
+```{r, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(maftools)
+
+# The original clinical information file {data_clinical_sample.txt} was modified replacing column *Sample Identifier* with "Tumor_Sample_Barcode" in order to be aligned with the adjacent mutational data
+
+MSK_CRC_2022_maf <- read.maf("data_mutations.txt", 
+clinicalData = "Clinical_Data_Format_INPUT_maf_13112023.tsv") 
+
+# more EDA stats to exploit more the data:
+
+head(MSK_CRC_2022_maf@data)
+
+```
+
+### More EDA plots to exploit further the avalance of functionalities
+
+```{r, warning=FALSE, message=FALSE}
+
+plotmafSummary(maf = MSK_CRC_2022_maf, rmOutlier = TRUE, addStat = 'median', dashboard = TRUE, titvRaw = FALSE)
+
+oncoplot(maf = MSK_CRC_2022_maf, top = 15)
+
+```
+
+### Additional analyses-> initial assessment of differential mutational frequencies between primary and metastatic samples
+
+```{r, warning=FALSE, message=FALSE}
+clinical_info <- MSK_CRC_2022_maf@clinical.data
+
+meta_samples <- clinical_info %>% filter(SAMPLE_TYPE=="Metastasis") %>%
+select(Tumor_Sample_Barcode) %>% pull()
+
+primary_samples <- clinical_info %>% filter(SAMPLE_TYPE=="Primary") %>%
+select(Tumor_Sample_Barcode) %>% pull()
+
+maf.primary = subsetMaf(maf = MSK_CRC_2022_maf, tsb = primary_samples, 
+mafObj = TRUE)
+maf.metastatic = subsetMaf(maf = MSK_CRC_2022_maf, tsb = meta_samples, 
+mafObj = TRUE)
+
+#Considering only genes which are mutated in at-least in 5 samples in one of the cohort to avoid bias due to genes mutated in single sample.
+pr.vs.mt <- mafCompare(m1 = maf.primary, m2 = maf.metastatic, m1Name = 'Primary', m2Name = 'Metastatic', minMut = 5)
+
+```
+
+### Do a fast frequentist analysis based on specific clinical information categorization
+
+```{r, warning=FALSE, message=FALSE}
+# Example here: naively comparing metastatic vs primary tumors
+Meta.ce = clinicalEnrichment(maf = MSK_CRC_2022_maf, clinicalFeature = 'SAMPLE_TYPE')
+Meta.ce$groupwise_comparision[p_value < 0.05]
+plotEnrichmentResults(enrich_res = Meta.ce, pVal = 0.2, geneFontSize = 0.5, annoFontSize = 0.6)
+
+```
+
+### Small questions-test check:
+
+#### 1) How you can quickly check the frequency/distribution of specific clinical variables?
+
+#### 2) Where you can fetch {or compute} the respective variant allele frequencies? Why VAF is critical for interpreting somatic mutations?
+
+#### 3) How you could subset your mutational data by only including SNVs?
+
+#### 4) How you could exploit the results of *mafCompare* function? Which are the initial major points you could highlight?
